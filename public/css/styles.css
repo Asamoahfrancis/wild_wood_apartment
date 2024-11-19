@@ -1,0 +1,22 @@
+body{
+    text-align: center;
+    box-sizing: border-box;
+}
+h1{
+    color:gray;
+}
+img{
+    width:300px;
+    height:300px;
+    border-radius: 50%;
+
+}
+span{
+    width: 500px;
+}
+p{
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
