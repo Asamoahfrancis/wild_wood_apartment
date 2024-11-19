@@ -10,6 +10,7 @@ interface Idbconnections {
 }
 
 const dbPORT = process.env.DB_CONNECTION as string;
+const dbUrlProd = process.env.MONGODB_PROD as string;
 
 export class DBClass implements Idbconnections {
   private static instance: DBClass | null = null;
@@ -44,20 +45,33 @@ export class DBClass implements Idbconnections {
 
   // Connect to MongoDB with retry logic
   public async connect(): Promise<void> {
-    if (!dbPORT) {
-      console.error(
-        "Database connection string is not defined in environment variables."
-      );
-      return;
-    }
+    const connectionString = (() => {
+      if (process.env.NODE_ENV === "production") {
+        if (!dbUrlProd) {
+          console.error(
+            "Production MongoDB connection string (MONGODB_PROD) is not defined in environment variables."
+          );
+          process.exit(1); // Exit if the production connection string is not set
+        }
+        return dbUrlProd;
+      } else {
+        if (!dbPORT) {
+          console.error(
+            "Development MongoDB connection string (DB_CONNECTION) is not defined in environment variables."
+          );
+          process.exit(1); // Exit if the development connection string is not set
+        }
+        return dbPORT;
+      }
+    })();
 
     let attempt = 0;
     while (attempt < DBClass.maxRetries) {
       try {
-        await mongoose.connect(dbPORT, {
+        await mongoose.connect(connectionString, {
           serverSelectionTimeoutMS: DBClass.serverSelectionTimeoutMS,
         });
-        console.log(chalk.white("MongoDB connection established"));
+        console.log(chalk.green("MongoDB connection established"));
         return; // Exit if connection is successful
       } catch (error) {
         attempt++;
@@ -67,13 +81,17 @@ export class DBClass implements Idbconnections {
         );
 
         if (attempt >= DBClass.maxRetries) {
-          console.error("Max retries reached. Failed to connect to MongoDB.");
-          return; // Exit if max retries are reached
+          console.error(
+            chalk.red("Max retries reached. Failed to connect to MongoDB.")
+          );
+          process.exit(1); // Exit if max retries are reached
         }
 
         // Wait before retrying
         console.log(
-          `Retrying to connect in ${DBClass.retryDelay / 1000} seconds...`
+          chalk.yellow(
+            `Retrying to connect in ${DBClass.retryDelay / 1000} seconds...`
+          )
         );
         await this.delay(DBClass.retryDelay);
       }

@@ -18,6 +18,7 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const chalk_1 = __importDefault(require("chalk"));
 dotenv_1.default.config();
 const dbPORT = process.env.DB_CONNECTION;
+const dbUrlProd = process.env.MONGODB_PROD;
 class DBClass {
     constructor() {
         mongoose_1.default.connection.on("connected", () => console.log(chalk_1.default.white("MongoDB connected")));
@@ -38,28 +39,40 @@ class DBClass {
     // Connect to MongoDB with retry logic
     connect() {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!dbPORT) {
-                console.error("Database connection string is not defined in environment variables.");
-                return;
-            }
+            const connectionString = (() => {
+                if (process.env.NODE_ENV === "production") {
+                    if (!dbUrlProd) {
+                        console.error("Production MongoDB connection string (MONGODB_PROD) is not defined in environment variables.");
+                        process.exit(1); // Exit if the production connection string is not set
+                    }
+                    return dbUrlProd;
+                }
+                else {
+                    if (!dbPORT) {
+                        console.error("Development MongoDB connection string (DB_CONNECTION) is not defined in environment variables.");
+                        process.exit(1); // Exit if the development connection string is not set
+                    }
+                    return dbPORT;
+                }
+            })();
             let attempt = 0;
             while (attempt < DBClass.maxRetries) {
                 try {
-                    yield mongoose_1.default.connect(dbPORT, {
+                    yield mongoose_1.default.connect(connectionString, {
                         serverSelectionTimeoutMS: DBClass.serverSelectionTimeoutMS,
                     });
-                    console.log(chalk_1.default.white("MongoDB connection established"));
+                    console.log(chalk_1.default.green("MongoDB connection established"));
                     return; // Exit if connection is successful
                 }
                 catch (error) {
                     attempt++;
                     console.error(`Error connecting to MongoDB (attempt ${attempt}/${DBClass.maxRetries}):`, error);
                     if (attempt >= DBClass.maxRetries) {
-                        console.error("Max retries reached. Failed to connect to MongoDB.");
-                        return; // Exit if max retries are reached
+                        console.error(chalk_1.default.red("Max retries reached. Failed to connect to MongoDB."));
+                        process.exit(1); // Exit if max retries are reached
                     }
                     // Wait before retrying
-                    console.log(`Retrying to connect in ${DBClass.retryDelay / 1000} seconds...`);
+                    console.log(chalk_1.default.yellow(`Retrying to connect in ${DBClass.retryDelay / 1000} seconds...`));
                     yield this.delay(DBClass.retryDelay);
                 }
             }
