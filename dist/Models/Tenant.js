@@ -35,11 +35,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const dotenv_1 = __importDefault(require("dotenv"));
 const mongoose_1 = __importStar(require("mongoose"));
 const LeasePeriod_1 = __importDefault(require("./LeasePeriod"));
 const Role_1 = __importDefault(require("./Role"));
 const TenantPaymentHistory_1 = __importDefault(require("./TenantPaymentHistory"));
 const Apartment_1 = __importDefault(require("./Apartment"));
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+dotenv_1.default.config();
+const secret = process.env.JWT_SECRET;
 const TenantSchema = new mongoose_1.Schema({
     TenantFirstName: {
         type: String,
@@ -95,9 +99,38 @@ const TenantSchema = new mongoose_1.Schema({
         type: String,
         trim: true,
     },
+    TenantTokens: [
+        {
+            token: {
+                type: String,
+            },
+        },
+    ],
 }, {
     timestamps: true,
 });
+TenantSchema.methods.GenerateTenantTokens = function () {
+    return __awaiter(this, void 0, void 0, function* () {
+        const tenantData = this;
+        const token = jsonwebtoken_1.default.sign({ _id: tenantData._id.toString(), role: tenantData.RoleKey.toString() }, secret);
+        tenantData.TenantTokens = tenantData.TenantTokens.concat({ token: token });
+        yield tenantData.save();
+        return token;
+    });
+};
+TenantSchema.statics.FindAuthTenants = function (phone, password) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const tenantModel = this;
+        const isTenant = yield tenantModel.findOne({
+            TenantPhone: phone,
+            TenantPassword: password,
+        });
+        if (!isTenant) {
+            throw new Error("Tenant is not found");
+        }
+        return isTenant;
+    });
+};
 TenantSchema.pre("save", function (next) {
     return __awaiter(this, void 0, void 0, function* () {
         const TenantData = this;
@@ -118,6 +151,7 @@ TenantSchema.pre("save", function (next) {
             }
         }
         if (TenantData.RoleKey) {
+            console.log("Role key : ", TenantData.RoleKey);
             const roleExits = yield Role_1.default.exists({ _id: TenantData.RoleKey });
             if (!roleExits) {
                 throw new Error("The specified RoleKey does not exist.");

@@ -8,9 +8,9 @@ const RolesController_1 = require("../Controllers/RolesController");
 const AuthMiddleware_1 = __importDefault(require("../Middlewares/AuthMiddleware"));
 const RoleRouter = express_1.default.Router();
 RoleRouter.post("/role", AuthMiddleware_1.default, RolesController_1.RoleController.PostRole);
-RoleRouter.get("/role", RolesController_1.RoleController.GetRole);
-RoleRouter.get("/role/:id", RolesController_1.RoleController.GetSingleRole);
-RoleRouter.put("/role/:id", RolesController_1.RoleController.UpdateRole);
-RoleRouter.delete("/role/:id", RolesController_1.RoleController.DeleteRole);
+RoleRouter.get("/role", AuthMiddleware_1.default, RolesController_1.RoleController.GetRole);
+RoleRouter.get("/role/:id", AuthMiddleware_1.default, RolesController_1.RoleController.GetSingleRole);
+RoleRouter.put("/role/:id", AuthMiddleware_1.default, RolesController_1.RoleController.UpdateRole);
+RoleRouter.delete("/role/:id", AuthMiddleware_1.default, RolesController_1.RoleController.DeleteRole);
 exports.default = RoleRouter;
 //# sourceMappingURL=RoleRoute.js.map

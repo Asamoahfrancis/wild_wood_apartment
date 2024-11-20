@@ -39,6 +39,10 @@ exports.CompanyInformationController = {
     }),
     CompanyData: (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
         try {
+            if (!req.companyData) {
+                res.status(404).send({ message: "Company Data is not available" });
+                return;
+            }
             res.status(200).send(req.companyData);
         }
         catch (error) {

@@ -15,6 +15,9 @@ import TenantPaymentHistoryRouter from "../Routers/TenantPaymentHistoryRoute";
 import swaggerJSDoc from "swagger-jsdoc";
 import swaggerUI from "swagger-ui-express";
 import path from "path";
+import cors from "cors";
+import morgan from "morgan";
+import TenantAdminSigninRouter from "../Authentication/Routers/TenantAdminSigninRoute";
 const dbInstance = DBClass.getInstance();
 export const app = express();
 
@@ -29,6 +32,7 @@ const options = {
     servers: [
       {
         url: "http://localhost:8080/api",
+        url_: "https://wild-wood-apartment.onrender.com",
       },
     ],
     components: {
@@ -46,7 +50,7 @@ const options = {
       },
     ],
   },
-  apis: [path.resolve(__dirname, "../Routers/*.js")],
+  apis: [path.resolve(__dirname, "../Routers/*.{ts,js}")],
 };
 
 const swaggerDocs = swaggerJSDoc(options);
@@ -64,29 +68,31 @@ startApp();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
+app.use(cors());
+app.use(morgan("dev"));
 app.get("/", (req, res) => {
   res.sendFile(__dirname + "/public/index.html");
 });
 
-app.use("/api/auth", CompanyInformationRouter);
-app.use("/api", TenantRouter);
-app.use("/api", RoleRouter);
-app.use("/api", LeasePeriodRouter);
-app.use("/api", ApartmentRouter);
-app.use("/api", ApartmentComplexRouter);
-app.use("/api", RoomFeeRouter);
-app.use("/api", ApartmantMaintainceRouter);
-app.use("/api", MaintainceFeeRouter);
-app.use("/api", ProblemRouter);
-app.use("/api", TenantPaymentRouter);
-app.use("/api", TenantPaymentHistoryRouter);
+app.use("/api/v1/auth", CompanyInformationRouter);
+app.use("/api/v1/auth", TenantAdminSigninRouter);
+app.use("/api/v1", TenantRouter);
+app.use("/api/v1", RoleRouter);
+app.use("/api/v1", LeasePeriodRouter);
+app.use("/api/v1", ApartmentRouter);
+app.use("/api/v1", ApartmentComplexRouter);
+app.use("/api/v1", RoomFeeRouter);
+app.use("/api/v1", ApartmantMaintainceRouter);
+app.use("/api/v1", MaintainceFeeRouter);
+app.use("/api/v1", ProblemRouter);
+app.use("/api/v1", TenantPaymentRouter);
+app.use("/api/v1", TenantPaymentHistoryRouter);
 app.use("/api-doc", swaggerUI.serve, swaggerUI.setup(swaggerDocs));
 
 app.get("*", (req, res) => {
-  res.send("The endpoint does not exist");
+  res.status(404).send("The endpoint does not exist");
 });
 
-// Global Error Handling Middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error(err.stack);
   res.status(err.status || 500).send({

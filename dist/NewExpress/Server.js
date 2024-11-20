@@ -30,6 +30,9 @@ const TenantPaymentHistoryRoute_1 = __importDefault(require("../Routers/TenantPa
 const swagger_jsdoc_1 = __importDefault(require("swagger-jsdoc"));
 const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
 const path_1 = __importDefault(require("path"));
+const cors_1 = __importDefault(require("cors"));
+const morgan_1 = __importDefault(require("morgan"));
+const TenantAdminSigninRoute_1 = __importDefault(require("../Authentication/Routers/TenantAdminSigninRoute"));
 const dbInstance = Database_1.DBClass.getInstance();
 exports.app = (0, express_1.default)();
 const options = {
@@ -43,6 +46,7 @@ const options = {
         servers: [
             {
                 url: "http://localhost:8080/api",
+                url_: "https://wild-wood-apartment.onrender.com",
             },
         ],
         components: {
@@ -60,7 +64,7 @@ const options = {
             },
         ],
     },
-    apis: [path_1.default.resolve(__dirname, "../Routers/*.js")],
+    apis: [path_1.default.resolve(__dirname, "../Routers/*.{ts,js}")],
 };
 const swaggerDocs = (0, swagger_jsdoc_1.default)(options);
 function startApp() {
@@ -76,26 +80,28 @@ startApp();
 exports.app.use(express_1.default.json());
 exports.app.use(express_1.default.urlencoded({ extended: true }));
 exports.app.use(express_1.default.static("public"));
+exports.app.use((0, cors_1.default)());
+exports.app.use((0, morgan_1.default)("dev"));
 exports.app.get("/", (req, res) => {
     res.sendFile(__dirname + "/public/index.html");
 });
-exports.app.use("/api/auth", CompanyInformation_1.default);
-exports.app.use("/api", TenantRoute_1.default);
-exports.app.use("/api", RoleRoute_1.default);
-exports.app.use("/api", LeasePeriodRoute_1.default);
-exports.app.use("/api", ApartmentRoute_1.default);
-exports.app.use("/api", ApartmentComplexRoute_1.default);
-exports.app.use("/api", RoomFeeRoute_1.default);
-exports.app.use("/api", ApartmantMaintainceRoute_1.default);
-exports.app.use("/api", MaintainceFeeRoute_1.default);
-exports.app.use("/api", ProblemRoute_1.default);
-exports.app.use("/api", TenantPaymentRoute_1.default);
-exports.app.use("/api", TenantPaymentHistoryRoute_1.default);
+exports.app.use("/api/v1/auth", CompanyInformation_1.default);
+exports.app.use("/api/v1/auth", TenantAdminSigninRoute_1.default);
+exports.app.use("/api/v1", TenantRoute_1.default);
+exports.app.use("/api/v1", RoleRoute_1.default);
+exports.app.use("/api/v1", LeasePeriodRoute_1.default);
+exports.app.use("/api/v1", ApartmentRoute_1.default);
+exports.app.use("/api/v1", ApartmentComplexRoute_1.default);
+exports.app.use("/api/v1", RoomFeeRoute_1.default);
+exports.app.use("/api/v1", ApartmantMaintainceRoute_1.default);
+exports.app.use("/api/v1", MaintainceFeeRoute_1.default);
+exports.app.use("/api/v1", ProblemRoute_1.default);
+exports.app.use("/api/v1", TenantPaymentRoute_1.default);
+exports.app.use("/api/v1", TenantPaymentHistoryRoute_1.default);
 exports.app.use("/api-doc", swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swaggerDocs));
 exports.app.get("*", (req, res) => {
-    res.send("The endpoint does not exist");
+    res.status(404).send("The endpoint does not exist");
 });
-// Global Error Handling Middleware
 exports.app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(err.status || 500).send({

@@ -14,14 +14,52 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TenantController = void 0;
 const Tenant_1 = __importDefault(require("../Models/Tenant"));
+const Role_1 = __importDefault(require("../Models/Role"));
 exports.TenantController = {
-    // Create a new tenant
     PostTenant: (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const tenantData = req.body;
+            const { companyData, adminTenantData } = req;
+            if (!tenantData.RoleKey) {
+                res.status(400).send({ message: "RoleKey is required" });
+                return;
+            }
+            const getRoleType = yield Role_1.default.findOne({ _id: tenantData.RoleKey });
+            if (!getRoleType) {
+                res.status(404).send({ message: "Invalid RoleKey provided" });
+                return;
+            }
+            if (companyData) {
+                if (getRoleType.RoleType !== "Tenant Administrator") {
+                    res.status(403).send({
+                        message: "Only Tenant Administrators can create Tenants",
+                    });
+                    return;
+                }
+                if (!tenantData.TenantPassword) {
+                    res.status(403).send({
+                        message: "Provide a default Password for Tenant Admin",
+                    });
+                    return;
+                }
+            }
+            else if (adminTenantData) {
+                if (getRoleType.RoleType !== "Tenant") {
+                    res.status(403).send({
+                        message: "Only Admins can create Tenant Administrators",
+                    });
+                    return;
+                }
+            }
+            else {
+                res.status(403).send({
+                    message: "Unauthorized: Invalid user type",
+                });
+                return;
+            }
             const newTenant = new Tenant_1.default(tenantData);
             const savedTenant = yield newTenant.save();
-            res.status(201).json(savedTenant);
+            res.status(201).send(savedTenant);
         }
         catch (error) {
             next(error);
@@ -30,7 +68,7 @@ exports.TenantController = {
     // Get all tenants
     GetTenant: (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            console.log("jwt:", req.headers);
+            // console.log("jwt:", req.headers);
             const tenants = yield Tenant_1.default.find()
                 .populate("LeasePeriodKey")
                 .populate({

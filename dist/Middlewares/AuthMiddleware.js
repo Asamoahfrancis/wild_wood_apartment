@@ -15,28 +15,51 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const CompanyInformation_1 = __importDefault(require("../Authentication/Model/CompanyInformation"));
+const Tenant_1 = __importDefault(require("../Models/Tenant"));
 dotenv_1.default.config();
 const AuthMiddleware = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {
         const secret = process.env.JWT_SECRET;
-        const token = (_a = req
-            .header("Authorization")) === null || _a === void 0 ? void 0 : _a.replace("Bearer", "").trim();
-        // console.log("Token Data : ", token);
-        const decoded = jsonwebtoken_1.default.verify(token, secret);
-        const companyUSer = yield CompanyInformation_1.default.findOne({
-            _id: decoded._id,
+        const token = (_a = req.header("Authorization")) === null || _a === void 0 ? void 0 : _a.replace("Bearer", "").trim();
+        if (!token) {
+            res.status(401).json({ message: "Authorization token is missing" });
+            return;
+        }
+        let decoded;
+        try {
+            decoded = jsonwebtoken_1.default.verify(token, secret);
+        }
+        catch (err) {
+            res.status(401).json({ message: "Invalid or expired token" });
+            return;
+        }
+        const { _id } = decoded;
+        const tenantUser = yield Tenant_1.default.findOne({
+            _id,
+            "TenantTokens.token": token,
+        }).populate("RoleKey");
+        if (tenantUser) {
+            req.adminTenantData = tenantUser;
+            req.token = token;
+            next();
+            return;
+        }
+        const companyUser = yield CompanyInformation_1.default.findOne({
+            _id,
             "tokens.token": token,
         });
-        if (!companyUSer) {
-            throw new Error("Company does not exist");
+        if (companyUser) {
+            req.companyData = companyUser;
+            req.token = token;
+            next();
+            return;
         }
-        req.companyData = companyUSer;
-        req.token = token;
-        next();
+        res.status(404).json({ message: "User not found or unauthorized" });
     }
     catch (error) {
-        next(error);
+        console.error("AuthMiddleware error:", error);
+        res.status(500).json({ message: error.message || "Internal Server Error" });
     }
 });
 exports.default = AuthMiddleware;

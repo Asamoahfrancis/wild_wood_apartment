@@ -70,7 +70,11 @@ TenantRouter.get("/tenants", AuthMiddleware, TenantController.GetTenant);
  *       404:
  *         description: Tenant not found.
  */
-TenantRouter.get("/tenants/:id", TenantController.GetSingleTenant);
+TenantRouter.get(
+  "/tenants/:id",
+  AuthMiddleware,
+  TenantController.GetSingleTenant
+);
 
 /**
  * @swagger
@@ -109,7 +113,7 @@ TenantRouter.get("/tenants/:id", TenantController.GetSingleTenant);
  *       404:
  *         description: Tenant not found.
  */
-TenantRouter.put("/tenants/:id", TenantController.UpdateTenant);
+TenantRouter.put("/tenants/:id", AuthMiddleware, TenantController.UpdateTenant);
 
 /**
  * @swagger
@@ -131,6 +135,10 @@ TenantRouter.put("/tenants/:id", TenantController.UpdateTenant);
  *       404:
  *         description: Tenant not found.
  */
-TenantRouter.delete("/tenants/:id", TenantController.DeleteTenant);
+TenantRouter.delete(
+  "/tenants/:id",
+  AuthMiddleware,
+  TenantController.DeleteTenant
+);
 
 export default TenantRouter;

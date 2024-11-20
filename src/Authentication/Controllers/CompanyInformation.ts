@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import CompanyInformation from "../Model/CompanyInformation";
 import { CustomRequest } from "../../Middlewares/AuthMiddleware";
+import { send } from "process";
 
 interface CompanyInformationType {
   SignUp: (req: Request, res: Response, next: NextFunction) => void;
@@ -51,6 +52,10 @@ export const CompanyInformationController = {
     next: NextFunction
   ) => {
     try {
+      if (!req.companyData) {
+        res.status(404).send({ message: "Company Data is not available" });
+        return;
+      }
       res.status(200).send(req.companyData);
     } catch (error) {
       next(error);

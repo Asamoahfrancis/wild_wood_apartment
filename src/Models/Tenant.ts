@@ -1,8 +1,11 @@
-import mongoose, { Schema, Document } from "mongoose";
+import dotenv from "dotenv";
+import mongoose, { Schema, Document, Model } from "mongoose";
 import LeasePeriod from "./LeasePeriod";
 import Role from "./Role";
 import TenantPaymentHistory from "./TenantPaymentHistory";
 import Apartment from "./Apartment";
+import jwt from "jsonwebtoken";
+dotenv.config();
 interface TenantType extends Document {
   TenantFirstName: string;
   TenantMiddleName: string;
@@ -14,7 +17,13 @@ interface TenantType extends Document {
   RoleKey: mongoose.Types.ObjectId;
   TenantPaymentHistoryKey: mongoose.Types.ObjectId;
   TenantPassword: string;
+  TenantTokens: Array<any>;
+  GenerateTenantTokens: () => Promise<string>;
 }
+interface TenantTypeModel extends Model<TenantType> {
+  FindAuthTenants(TenantEmail: string, TenantPassword: string): Promise<any>;
+}
+const secret = process.env.JWT_SECRET as string;
 
 const TenantSchema = new Schema<TenantType>(
   {
@@ -72,11 +81,43 @@ const TenantSchema = new Schema<TenantType>(
       type: String,
       trim: true,
     },
+    TenantTokens: [
+      {
+        token: {
+          type: String,
+        },
+      },
+    ],
   },
   {
     timestamps: true,
   }
 );
+
+TenantSchema.methods.GenerateTenantTokens = async function () {
+  const tenantData = this;
+
+  const token = jwt.sign(
+    { _id: tenantData._id.toString(), role: tenantData.RoleKey.toString() },
+    secret
+  );
+  tenantData.TenantTokens = tenantData.TenantTokens.concat({ token: token });
+  await tenantData.save();
+  return token;
+};
+
+TenantSchema.statics.FindAuthTenants = async function (phone, password) {
+  const tenantModel = this;
+  const isTenant = await tenantModel.findOne({
+    TenantPhone: phone,
+    TenantPassword: password,
+  });
+  if (!isTenant) {
+    throw new Error("Tenant is not found");
+  }
+
+  return isTenant;
+};
 
 TenantSchema.pre("save", async function (next) {
   const TenantData = this;
@@ -97,6 +138,7 @@ TenantSchema.pre("save", async function (next) {
     }
   }
   if (TenantData.RoleKey) {
+    console.log("Role key : ", TenantData.RoleKey);
     const roleExits = await Role.exists({ _id: TenantData.RoleKey });
     if (!roleExits) {
       throw new Error("The specified RoleKey does not exist.");
@@ -122,6 +164,9 @@ TenantSchema.pre("save", async function (next) {
   }
   next();
 });
-const Tenant = mongoose.model<TenantType>("Tenant", TenantSchema);
+const Tenant = mongoose.model<TenantType>(
+  "Tenant",
+  TenantSchema
+) as TenantTypeModel;
 
 export default Tenant;
