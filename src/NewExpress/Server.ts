@@ -27,12 +27,24 @@ const options = {
     info: {
       title: "🌲 WILD WOOD APARTMENTS API 🌲",
       version: "1.0.0",
-      description: "API documentation for the Tenant system",
+      description:
+        "API documentation for the Tenant system. Currently, managers fill out a paper form 📄 and mail it back to headquarters 🏢. Many apartment managers have complained 😤 that preparing this report is a very difficult and time-consuming process ⏳. Also, the managers at corporate headquarters have expressed concerns about the accuracy ✅ and verifiability 📊 of the reports.",
+      contact: {
+        email: "brefofrancisasamaoh@gamil.com",
+      },
     },
     servers: [
       {
-        url: "http://localhost:8080/api",
-        url_: "https://wild-wood-apartment.onrender.com",
+        url: "https://wild-wood-apartment.onrender.com/api/v1/auth",
+      },
+      {
+        url: "https://wild-wood-apartment.onrender.com/api/v1",
+      },
+      {
+        url: "http://localhost:8080/api/v1",
+      },
+      {
+        url: "http://localhost:8080/api/v1/auth",
       },
     ],
     components: {
@@ -50,7 +62,10 @@ const options = {
       },
     ],
   },
-  apis: [path.resolve(__dirname, "../Routers/*.{ts,js}")],
+  apis: [
+    path.resolve(__dirname, "../Routers/*.{ts,js}"),
+    path.resolve(__dirname, "../Authentication/Routers/*.{ts,js}"),
+  ],
 };
 
 const swaggerDocs = swaggerJSDoc(options);
@@ -87,7 +102,15 @@ app.use("/api/v1", MaintainceFeeRouter);
 app.use("/api/v1", ProblemRouter);
 app.use("/api/v1", TenantPaymentRouter);
 app.use("/api/v1", TenantPaymentHistoryRouter);
-app.use("/api-doc", swaggerUI.serve, swaggerUI.setup(swaggerDocs));
+app.use(
+  "/api-doc",
+  swaggerUI.serve,
+  swaggerUI.setup(swaggerDocs, {
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+  })
+);
 
 app.get("*", (req, res) => {
   res.status(404).send("The endpoint does not exist");

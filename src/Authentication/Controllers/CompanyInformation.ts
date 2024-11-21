@@ -79,7 +79,6 @@ export const CompanyInformationController = {
         "CompanyAddress",
         "CompanyPhone",
         "CompanyEmail",
-        "CompanyRole",
       ];
 
       const ObjectKeys = Object.keys(req.body);

@@ -62,7 +62,6 @@ exports.CompanyInformationController = {
                 "CompanyAddress",
                 "CompanyPhone",
                 "CompanyEmail",
-                "CompanyRole",
             ];
             const ObjectKeys = Object.keys(req.body);
             const isMatch = ObjectKeys.every((companydataKeys) => legalUpdateData.includes(companydataKeys));

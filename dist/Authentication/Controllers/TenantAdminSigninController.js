@@ -17,11 +17,9 @@ const Tenant_1 = __importDefault(require("../../Models/Tenant"));
 exports.TenantAdminController = {
     TenantSigin: (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const tenantData = yield Tenant_1.default.FindAuthTenants(req.body.TenantEmail, req.body.TenantPassword);
+            const tenantData = yield Tenant_1.default.FindAuthTenants(req.body.TenantPhone, req.body.TenantPassword);
             const token = yield tenantData.GenerateTenantTokens();
-            res
-                .status(200)
-                .send({
+            res.status(200).send({
                 message: "Login succesfully",
                 payload: tenantData,
                 token: token,

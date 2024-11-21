@@ -41,12 +41,23 @@ const options = {
         info: {
             title: "🌲 WILD WOOD APARTMENTS API 🌲",
             version: "1.0.0",
-            description: "API documentation for the Tenant system",
+            description: "API documentation for the Tenant system. Currently, managers fill out a paper form 📄 and mail it back to headquarters 🏢. Many apartment managers have complained 😤 that preparing this report is a very difficult and time-consuming process ⏳. Also, the managers at corporate headquarters have expressed concerns about the accuracy ✅ and verifiability 📊 of the reports.",
+            contact: {
+                email: "brefofrancisasamaoh@gamil.com",
+            },
         },
         servers: [
             {
-                url: "http://localhost:8080/api",
-                url_: "https://wild-wood-apartment.onrender.com",
+                url: "https://wild-wood-apartment.onrender.com/api/v1/auth",
+            },
+            {
+                url: "https://wild-wood-apartment.onrender.com/api/v1",
+            },
+            {
+                url: "http://localhost:8080/api/v1",
+            },
+            {
+                url: "http://localhost:8080/api/v1/auth",
             },
         ],
         components: {
@@ -64,7 +75,10 @@ const options = {
             },
         ],
     },
-    apis: [path_1.default.resolve(__dirname, "../Routers/*.{ts,js}")],
+    apis: [
+        path_1.default.resolve(__dirname, "../Routers/*.{ts,js}"),
+        path_1.default.resolve(__dirname, "../Authentication/Routers/*.{ts,js}"),
+    ],
 };
 const swaggerDocs = (0, swagger_jsdoc_1.default)(options);
 function startApp() {
@@ -98,7 +112,11 @@ exports.app.use("/api/v1", MaintainceFeeRoute_1.default);
 exports.app.use("/api/v1", ProblemRoute_1.default);
 exports.app.use("/api/v1", TenantPaymentRoute_1.default);
 exports.app.use("/api/v1", TenantPaymentHistoryRoute_1.default);
-exports.app.use("/api-doc", swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swaggerDocs));
+exports.app.use("/api-doc", swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swaggerDocs, {
+    swaggerOptions: {
+        persistAuthorization: true,
+    },
+}));
 exports.app.get("*", (req, res) => {
     res.status(404).send("The endpoint does not exist");
 });
