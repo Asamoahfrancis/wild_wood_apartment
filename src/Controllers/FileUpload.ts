@@ -2,67 +2,78 @@ import { Response, Request, NextFunction } from "express";
 import Busboy from "busboy";
 import dotenv from "dotenv";
 dotenv.config();
-import { v2 as cloudinary } from "cloudinary";
-interface FileUploadType {
-  UploadFile: (req: Request, res: Response, next: NextFunction) => void;
-}
+import { v2 as cloudinary, UploadStream } from "cloudinary";
 
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME, // Replace with your Cloudinary cloud name
-  api_key: process.env.CLOUDINARY_API_KEY, // Replace with your API key
-  api_secret: process.env.CLOUDINARY_API_SECRET, // Replace with your API secret
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
 export const FileUploadController = {
   UploadFile: (req: Request, res: Response, next: NextFunction) => {
     const bb = Busboy({ headers: req.headers });
-    const uploadedFiles: Array<{ url: string; name: string }> = [];
+    const uploadPromises: Array<Promise<{ url: string; name: string }>> = [];
 
     bb.on(
       "file",
       (
         fieldname: any,
-        file: any,
+        file: { pipe: (arg0: UploadStream) => void },
         filename: any,
         encoding: any,
         mimetype: any
       ) => {
-        console.log(`Uploading: ${filename}`);
+        // console.log(`Uploading file: ${filename}`);
 
-        const cloudinaryStream = cloudinary.uploader.upload_stream(
-          { folder: "uploads" }, // Optional: Specify folder in Cloudinary
-          (error, result) => {
-            if (error) {
-              console.error("Cloudinary upload error:", error);
-              return res
-                .status(500)
-                .send({ message: "File upload failed", error });
-            }
+        const uploadPromise = new Promise<{ url: string; name: string }>(
+          (resolve, reject) => {
+            const cloudinaryStream = cloudinary.uploader.upload_stream(
+              { folder: "uploads" },
+              (error, result) => {
+                if (error) {
+                  console.error("Cloudinary upload error:", error);
+                  return reject(
+                    new Error(error.message || "Cloudinary upload failed")
+                  );
+                }
 
-            if (result) {
-              uploadedFiles.push({
-                url: result.secure_url,
-                name: result.original_filename,
-              });
-              console.log(`Uploaded to Cloudinary: ${result.secure_url}`);
-            }
+                if (result) {
+                  resolve({
+                    url: result.secure_url,
+                    name: result.original_filename,
+                  });
+                }
+              }
+            );
+
+            file.pipe(cloudinaryStream);
           }
         );
 
-        // Pipe file stream to Cloudinary
-        file.pipe(cloudinaryStream);
+        uploadPromises.push(uploadPromise);
       }
     );
 
     bb.on("field", (fieldname, val) => {
-      console.log(`Field [${fieldname}]: value: ${val}`);
+      console.log(`Received field [${fieldname}]: ${val}`);
     });
 
-    bb.on("close", () => {
-      console.log("Done parsing form!");
-      res
-        .status(201)
-        .send({ message: "Files uploaded successfully", files: uploadedFiles });
+    bb.on("close", async () => {
+      try {
+        const uploadedFiles = await Promise.all(uploadPromises);
+        // console.log("All files uploaded successfully:", uploadedFiles);
+        res.status(201).json({
+          message: "Files uploaded successfully",
+          files: uploadedFiles,
+        });
+      } catch (error: any) {
+        console.error("File upload process encountered an error:", error);
+        res.status(500).json({
+          message: "File upload failed",
+          error: error.message || "Unknown error occurred",
+        });
+      }
     });
 
     req.pipe(bb);

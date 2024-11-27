@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const FileUpload_1 = require("../Controllers/FileUpload");
 const FileUpload = express_1.default.Router();
-FileUpload.post("/file", FileUpload_1.FileUploadController.UploadFile);
+FileUpload.post("/upload", FileUpload_1.FileUploadController.UploadFile);
 exports.default = FileUpload;
+//hello
 //# sourceMappingURL=FileUpload.js.map
