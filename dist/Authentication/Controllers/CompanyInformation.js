@@ -21,7 +21,7 @@ exports.CompanyInformationController = {
             const newCompanyData = new CompanyInformation_1.default(CompanyData);
             const savedTenant = yield newCompanyData.save();
             const token = yield (newCompanyData === null || newCompanyData === void 0 ? void 0 : newCompanyData.GenerateAuthToken());
-            res.status(201).json({ savedTenant, token: token });
+            res.status(201).json({ payload: savedTenant, token: token });
         }
         catch (error) {
             next(error);
@@ -43,7 +43,7 @@ exports.CompanyInformationController = {
                 res.status(404).send({ message: "Company Data is not available" });
                 return;
             }
-            res.status(200).send(req.companyData);
+            res.status(200).send({ payload: req.companyData });
         }
         catch (error) {
             next(error);
@@ -77,7 +77,9 @@ exports.CompanyInformationController = {
                 }
             });
             yield companyData.save();
-            res.status(200).json({ message: "Update successful", companyData });
+            res
+                .status(200)
+                .json({ message: "Update successful", payload: companyData });
         }
         catch (error) {
             next(error);
