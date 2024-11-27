@@ -32,7 +32,7 @@ export const RoleController: RoleControllerType = {
   ): Promise<void> => {
     try {
       const roles = await Role.find();
-      res.status(200).json(roles);
+      res.status(200).send({ payload: roles });
     } catch (error) {
       next(error);
     }
@@ -47,10 +47,10 @@ export const RoleController: RoleControllerType = {
       const roleId = req.params.id;
       const role = await Role.findById(roleId);
       if (!role) {
-        res.status(404).json({ message: "Role not found" });
+        res.status(404).send({ message: "Role not found" });
         return;
       }
-      res.status(200).json(role);
+      res.status(200).send({ payload: role });
     } catch (error) {
       next(error);
     }
@@ -94,10 +94,10 @@ export const RoleController: RoleControllerType = {
       const roleId = req.params.id;
       const deletedRole = await Role.findByIdAndDelete(roleId);
       if (!deletedRole) {
-        res.status(404).json({ message: "Role not found" });
+        res.status(404).send({ message: "Role not found" });
         return;
       }
-      res.status(200).json({ message: "Role deleted successfully" });
+      res.status(200).send({ message: "Role deleted successfully" });
     } catch (error) {
       next(error);
     }

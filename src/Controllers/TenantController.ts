@@ -88,7 +88,7 @@ export const TenantController: TenantControllerType = {
             path: "TenantKey TenantPaymentKey",
           },
         });
-      res.status(200).json(tenants);
+      res.status(200).send({ payload: tenants });
     } catch (error) {
       next(error);
     }
@@ -116,10 +116,10 @@ export const TenantController: TenantControllerType = {
           },
         });
       if (!tenant) {
-        res.status(404).json({ message: "Tenant not found" });
+        res.status(404).send({ message: "Tenant not found" });
         return;
       }
-      res.status(200).json(tenant);
+      res.status(200).send({ payload: tenant });
     } catch (error) {
       next(error);
     }
@@ -167,7 +167,7 @@ export const TenantController: TenantControllerType = {
         }
       });
       await updatedTenant.save();
-      res.status(200).json({ message: "Update successful", updatedTenant });
+      res.status(200).send({ message: "Update successful", updatedTenant });
     } catch (error) {
       next(error);
     }
