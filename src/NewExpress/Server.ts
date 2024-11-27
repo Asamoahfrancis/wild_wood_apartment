@@ -18,6 +18,7 @@ import path from "path";
 import cors from "cors";
 import morgan from "morgan";
 import TenantAdminSigninRouter from "../Authentication/Routers/TenantAdminSigninRoute";
+import FileUpload from "../Routers/FileUpload";
 const dbInstance = DBClass.getInstance();
 export const app = express();
 
@@ -102,6 +103,7 @@ app.use("/api/v1", MaintainceFeeRouter);
 app.use("/api/v1", ProblemRouter);
 app.use("/api/v1", TenantPaymentRouter);
 app.use("/api/v1", TenantPaymentHistoryRouter);
+app.use("/api/v1", FileUpload);
 app.use(
   "/api-doc",
   swaggerUI.serve,

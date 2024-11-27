@@ -1,5 +1,6 @@
 import { Response, Request, NextFunction } from "express";
 import Apartment from "../Models/Apartment";
+import { CustomRequest } from "../Middlewares/AuthMiddleware";
 interface ApartmentType {
   CreateApartment: (req: Request, res: Response, next: NextFunction) => void;
   GetApartment: (req: Request, res: Response, next: NextFunction) => void;
@@ -19,9 +20,22 @@ export const ApartmentController: ApartmentType = {
       next(error);
     }
   },
-  GetApartment: async (req: Request, res: Response, next: NextFunction) => {
+  GetApartment: async (
+    req: CustomRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
-      const allApartment = await Apartment.find();
+      const { ApartmentKey } = req.adminTenantData;
+
+      const getApartment = await Apartment.findOne({ _id: ApartmentKey });
+      let ApartmentComplexKey_;
+      if (getApartment) {
+        ApartmentComplexKey_ = getApartment.ApartmentComplexKey;
+      }
+      const allApartment = await Apartment.find({
+        ApartmentComplexKey: ApartmentComplexKey_,
+      });
       res.status(201).send({ payload: allApartment });
     } catch (error) {
       next(error);

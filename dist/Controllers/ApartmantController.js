@@ -28,7 +28,15 @@ exports.ApartmentController = {
     }),
     GetApartment: (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const allApartment = yield Apartment_1.default.find();
+            const { ApartmentKey } = req.adminTenantData;
+            const getApartment = yield Apartment_1.default.findOne({ _id: ApartmentKey });
+            let ApartmentComplexKey_;
+            if (getApartment) {
+                ApartmentComplexKey_ = getApartment.ApartmentComplexKey;
+            }
+            const allApartment = yield Apartment_1.default.find({
+                ApartmentComplexKey: ApartmentComplexKey_,
+            });
             res.status(201).send({ payload: allApartment });
         }
         catch (error) {

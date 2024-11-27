@@ -33,6 +33,7 @@ const path_1 = __importDefault(require("path"));
 const cors_1 = __importDefault(require("cors"));
 const morgan_1 = __importDefault(require("morgan"));
 const TenantAdminSigninRoute_1 = __importDefault(require("../Authentication/Routers/TenantAdminSigninRoute"));
+const FileUpload_1 = __importDefault(require("../Routers/FileUpload"));
 const dbInstance = Database_1.DBClass.getInstance();
 exports.app = (0, express_1.default)();
 const options = {
@@ -112,6 +113,7 @@ exports.app.use("/api/v1", MaintainceFeeRoute_1.default);
 exports.app.use("/api/v1", ProblemRoute_1.default);
 exports.app.use("/api/v1", TenantPaymentRoute_1.default);
 exports.app.use("/api/v1", TenantPaymentHistoryRoute_1.default);
+exports.app.use("/api/v1", FileUpload_1.default);
 exports.app.use("/api-doc", swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swaggerDocs, {
     swaggerOptions: {
         persistAuthorization: true,
