@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document } from "mongoose";
-
 interface RoleType extends Document {
   RoleType: string;
+  CompanyInformationKey: mongoose.Schema.Types.ObjectId;
 }
 
 const RoleSchema = new Schema<RoleType>(
@@ -9,12 +9,11 @@ const RoleSchema = new Schema<RoleType>(
     RoleType: {
       type: String,
       required: [true, "RoleType is required"],
-      unique: true,
-      enum: {
-        values: ["Tenant Administrator", "Tenant"],
-        message: "Roles must be one of 'Tenant Administrator', 'Tenant'",
-      },
-      default: "Tenant",
+    },
+    CompanyInformationKey: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "CompanyInformation",
+      required: [true, "CompanyInformationKey is required"],
     },
   },
   {

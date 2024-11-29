@@ -28,12 +28,11 @@ const RoleSchema = new mongoose_1.Schema({
     RoleType: {
         type: String,
         required: [true, "RoleType is required"],
-        unique: true,
-        enum: {
-            values: ["Tenant Administrator", "Tenant"],
-            message: "Roles must be one of 'Tenant Administrator', 'Tenant'",
-        },
-        default: "Tenant",
+    },
+    CompanyInformationKey: {
+        type: mongoose_1.default.Schema.Types.ObjectId,
+        ref: "CompanyInformation",
+        required: [true, "CompanyInformationKey is required"],
     },
 }, {
     timestamps: true,

@@ -14,11 +14,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RoleController = void 0;
 const Role_1 = __importDefault(require("../Models/Role"));
+const mongoose_1 = __importDefault(require("mongoose"));
 exports.RoleController = {
     PostRole: (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const { RoleType } = req.body;
-            const newRole = new Role_1.default({ RoleType });
+            const { RoleType, CompanyInformationKey } = req.body;
+            const newRole = new Role_1.default({ RoleType, CompanyInformationKey });
             const savedRole = yield newRole.save();
             res.status(201).json(savedRole);
         }
@@ -28,10 +29,30 @@ exports.RoleController = {
     }),
     GetRole: (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const roles = yield Role_1.default.find();
-            res.status(200).send({ payload: roles });
+            // Validate `companyData` and its `_id`
+            if (!req.companyData || !req.companyData._id) {
+                res.status(400).json({
+                    message: "Invalid request. Missing company data or ID.",
+                });
+                return;
+            }
+            const companyId = new mongoose_1.default.Types.ObjectId(req.companyData._id);
+            const roles = yield Role_1.default.find({
+                CompanyInformationKey: companyId,
+            }).populate("CompanyInformationKey");
+            if (!roles || roles.length === 0) {
+                res.status(404).json({
+                    message: `No roles found for company ID: ${req.companyData._id}`,
+                });
+                return;
+            }
+            res.status(200).json({
+                message: "Roles retrieved successfully",
+                payload: roles,
+            });
         }
         catch (error) {
+            console.error("Error fetching roles:", error);
             next(error);
         }
     }),

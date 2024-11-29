@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import Role from "../Models/Role";
+import { CustomRequest } from "../Middlewares/AuthMiddleware";
+import mongoose from "mongoose";
 
 interface RoleControllerType {
   PostRole: (req: Request, res: Response, next: NextFunction) => void;
@@ -16,8 +18,8 @@ export const RoleController: RoleControllerType = {
     next: NextFunction
   ): Promise<void> => {
     try {
-      const { RoleType } = req.body;
-      const newRole = new Role({ RoleType });
+      const { RoleType, CompanyInformationKey } = req.body;
+      const newRole = new Role({ RoleType, CompanyInformationKey });
       const savedRole = await newRole.save();
       res.status(201).json(savedRole);
     } catch (error) {
@@ -26,14 +28,38 @@ export const RoleController: RoleControllerType = {
   },
 
   GetRole: async (
-    req: Request,
+    req: CustomRequest,
     res: Response,
     next: NextFunction
   ): Promise<void> => {
     try {
-      const roles = await Role.find();
-      res.status(200).send({ payload: roles });
+      // Validate `companyData` and its `_id`
+      if (!req.companyData || !req.companyData._id) {
+        res.status(400).json({
+          message: "Invalid request. Missing company data or ID.",
+        });
+        return;
+      }
+
+      const companyId = new mongoose.Types.ObjectId(req.companyData._id);
+
+      const roles = await Role.find({
+        CompanyInformationKey: companyId,
+      }).populate("CompanyInformationKey");
+
+      if (!roles || roles.length === 0) {
+        res.status(404).json({
+          message: `No roles found for company ID: ${req.companyData._id}`,
+        });
+        return;
+      }
+
+      res.status(200).json({
+        message: "Roles retrieved successfully",
+        payload: roles,
+      });
     } catch (error) {
+      console.error("Error fetching roles:", error);
       next(error);
     }
   },

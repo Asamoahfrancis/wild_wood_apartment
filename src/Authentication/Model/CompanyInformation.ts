@@ -17,7 +17,6 @@ interface CompanyAuthenticationType extends Document {
   CompanyForgetPassword?: string;
   CompanyConfirmPassword?: string;
   _confirmPassword?: string;
-  CompanyRole: mongoose.Schema.Types.ObjectId;
   GenerateAuthToken: () => Promise<string>;
   tokens: Array<{ token: string }>;
 }
@@ -72,11 +71,7 @@ const CompanyAuthenticationTypeSchema = new Schema<CompanyAuthenticationType>(
     CompanyForgetPassword: {
       type: String,
     },
-    CompanyRole: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Role",
-      // required: [true, "CompanyRole is required"],
-    },
+
     tokens: [
       {
         token: {
@@ -101,13 +96,6 @@ CompanyAuthenticationTypeSchema.virtual("CompanyConfirmPassword")
 
 CompanyAuthenticationTypeSchema.pre("save", async function (next) {
   const Companyuser = this as CompanyAuthenticationType;
-
-  if (Companyuser.CompanyRole) {
-    const roleExists = await Role.exists({ _id: Companyuser.CompanyRole });
-    if (!roleExists) {
-      throw new Error("The specified CompanyRole does not exist.");
-    }
-  }
 
   if (Companyuser.isModified("CompanyPassword")) {
     if (Companyuser.CompanyConfirmPassword !== Companyuser.CompanyPassword) {

@@ -1,3 +1,4 @@
+import "./socket/socket";
 import { app } from "./NewExpress/Server";
 import dotenv from "dotenv";
 import chalk from "chalk";

@@ -37,7 +37,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
-const Role_1 = __importDefault(require("../../Models/Role"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
@@ -85,11 +84,6 @@ const CompanyAuthenticationTypeSchema = new mongoose_1.Schema({
     CompanyForgetPassword: {
         type: String,
     },
-    CompanyRole: {
-        type: mongoose_1.default.Schema.Types.ObjectId,
-        ref: "Role",
-        // required: [true, "CompanyRole is required"],
-    },
     tokens: [
         {
             token: {
@@ -111,12 +105,6 @@ CompanyAuthenticationTypeSchema.virtual("CompanyConfirmPassword")
 CompanyAuthenticationTypeSchema.pre("save", function (next) {
     return __awaiter(this, void 0, void 0, function* () {
         const Companyuser = this;
-        if (Companyuser.CompanyRole) {
-            const roleExists = yield Role_1.default.exists({ _id: Companyuser.CompanyRole });
-            if (!roleExists) {
-                throw new Error("The specified CompanyRole does not exist.");
-            }
-        }
         if (Companyuser.isModified("CompanyPassword")) {
             if (Companyuser.CompanyConfirmPassword !== Companyuser.CompanyPassword) {
                 throw new Error("CompanyConfirmPassword must match CompanyPassword");
